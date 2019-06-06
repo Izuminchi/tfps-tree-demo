@@ -14,8 +14,8 @@
         :key="index"
         :item="child"
         @make-folder="$emit('make-folder', $event)"
-        @add-item="$emit('add-item', $event)"
-      ></tree-item>
+        @add-item="$emit('add-item', $event)">
+      </tree-item>
       <li class="add" @click="$emit('add-item', item)">+</li>
     </ul>
   </li>
