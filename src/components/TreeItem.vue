@@ -37,11 +37,7 @@ export default {
         this.item.children.length
     },
     showAdd: function () {
-      if (this.item.type == "st" && this.item.children && this.item.children.length != 0) {
-        return false
-      } else {
-        return true
-      }
+      return this.item.type != 'st' && this.item.type != 'tm'
     }
   },
   methods: {

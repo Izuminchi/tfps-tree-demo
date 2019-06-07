@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div> 
+    <div>
       <b-button @click="showModal=true, itemType='op'">+ 事業者追加</b-button>
       <b-modal v-model="showModal">
         <template slot="modal-title">{{ modalTitle }}</template>
@@ -12,16 +12,21 @@
               {text: '既存 ', value: '2'}
               ]"
               :checked="3">
-            </b-form-radio-group>
-            <b-form-input v-model="itemName"></b-form-input>
-         </b-form-group>
+          </b-form-radio-group>
+          <b-form-input v-model="itemName"></b-form-input>
+          <div v-if="itemType === 'st'">
+            <b-form-group id="input-group-2" label="端末台数" label-for="input-2">
+              <b-form-input id="input-2" v-model="itemNum"></b-form-input>
+            </b-form-group>
+          </div>
+        </b-form-group>
          <template slot="modal-footer" slot-scope="{ ok, cancel }">
            <b-button size="sm" @click="cancel()">Cancel</b-button>
            <b-button size="sm" variant="primary" @click="add(), showModal=false">OK</b-button>
          </template>
       </b-modal>
     </div>
-    
+
     <ul v-for="data in treeData" id="tree">
       <tree-item
         class="item"
@@ -43,6 +48,7 @@ export default {
       showModal: false,
       treeData: [],
       itemName: '',
+      itemNum: '',
       itemType: '',
       item: Object,
       modalTitle: '事業者登録'
@@ -63,10 +69,6 @@ export default {
           this.itemType = "st"
           break;
         case "st":
-          this.modalTitle = "設置端末数登録"
-          this.itemType = "tm"
-          break;
-        case "tm":
           return
         default:
       }
@@ -74,20 +76,31 @@ export default {
       this.showModal = true
     },
     add: function () {
-      if (this.itemType != "op") {
+      if (this.itemType === "op") {
+        this.treeData.push({name: this.itemName, type: this.itemType})
+      } else if (this.itemType === "st") {
+        this.item.children.push({
+          name: this.itemName,
+          type: this.itemType,
+          children: [{
+            name: this.itemNum,
+            type: "tm"
+            }]
+        })
+
+      } else {
         this.item.children.push({
           name: this.itemName,
           type: this.itemType
         })
-      } else {
-        this.treeData.push({name: this.itemName, type: this.itemType})
+
       }
       this.clearItemName()
     },
     clearItemName: function () {
       this.itemName = ''
+      this.itemNum = ''
     }
   }
 }
 </script>
-
