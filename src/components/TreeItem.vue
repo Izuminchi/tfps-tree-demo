@@ -2,22 +2,20 @@
   <li>
     <div
       :class="{bold: isFolder}"
-      @click="toggle"
-      @dblclick="makeFolder">
+      @click="toggle">
       {{ item.name }}
-      <span>[ {{ isOpen ? '-' : '+' }} ]</span>
+      <span v-show="item.children != undefined">[ {{ isOpen ? '-' : '+' }} ]</span>
     </div>
     <ul v-show="isOpen">
-      <li class="add" @click="$emit('add-item', item)">+</li>
+      <li v-show="showAdd" class="add" @click="$emit('add-item', item)">+</li>
       <tree-item
         class="item"
         v-for="(child, index) in item.children"
         :key="index"
         :item="child"
-        @make-folder="$emit('make-folder', $event)"
+        @click="toggle"
         @add-item="$emit('add-item', $event)">
       </tree-item>
-      
     </ul>
   </li>
 </template>
@@ -37,18 +35,19 @@ export default {
     isFolder: function () {
       return this.item.children &&
         this.item.children.length
+    },
+    showAdd: function () {
+      if (this.item.type == "st" && this.item.children && this.item.children.length != 0) {
+        return false
+      } else {
+        return true
+      }
     }
   },
   methods: {
     toggle: function () {
       if (this.isFolder) {
         this.isOpen = !this.isOpen
-      }
-    },
-    makeFolder: function () {
-      if (!this.isFolder) {
-      	this.$emit('make-folder', this.item)
-        this.isOpen = true
       }
     }
   }

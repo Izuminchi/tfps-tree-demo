@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div > 
+    <div> 
       <b-button @click="showModal=true, itemType='op'">+ 事業者追加</b-button>
       <b-modal v-model="showModal">
         <template slot="modal-title">{{ modalTitle }}</template>
@@ -26,7 +26,6 @@
       <tree-item
         class="item"
         :item="data"
-        @make-folder="makeFolder"
         @add-item="addItem">
       </tree-item>
     </ul>
@@ -50,15 +49,10 @@ export default {
     }
   },
   methods: {
-    makeFolder: function (item) {
-      this.$set(item, 'children', [])
-    },
     addItem: function (item) {
-      console.log(item);
       if (item.children == undefined) {
         this.$set(item, 'children', [])
       }
-      console.log(item);
       switch (item.type) {
         case "op":
           this.modalTitle = "加盟店登録"
@@ -80,7 +74,6 @@ export default {
       this.showModal = true
     },
     add: function () {
-      console.log(this.itemType);
       if (this.itemType != "op") {
         this.item.children.push({
           name: this.itemName,
