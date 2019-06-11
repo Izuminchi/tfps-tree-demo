@@ -1,22 +1,44 @@
 <template>
   <div>
     <div>
-      <b-button @click="showModal=true, itemType='op'">+ 事業者追加</b-button>
+      <b-row class="justify-content-center">
+        <b-col sm="4" md="2">
+          <b-button block @click="addOperator()">+ 事業者追加</b-button>
+        </b-col>
+        <b-col sm="4" md="2">
+          <b-button block @click="printItemList()">作成</b-button>
+        </b-col>
+      </b-row>
       <b-modal v-model="showModal">
         <template slot="modal-title">{{ modalTitle }}</template>
         <b-form-group label-for="inputname">
-          <b-form-radio-group id="inputname"
+          <b-form-radio-group
             :plain="true"
             :options="[
-              {text: '新規 ', value: '1'},
-              {text: '既存 ', value: '2'}
+              {text: '新規 ', value: true},
+              {text: '既存 ', value: false}
               ]"
-              :checked="3">
+            :checked="1"
+            v-model="isNew">
           </b-form-radio-group>
-          <b-form-input v-model="itemName"></b-form-input>
+          <b-form-group
+            label="ID"
+            label-for="id"
+            :label-cols="2">
+            <b-form-input id="id" v-model="itemId" v-bind:disabled="isNew"></b-form-input>
+          </b-form-group>
+          <b-form-group
+            label="名称"
+            label-for="name"
+            :label-cols="2">
+            <b-form-input id="name" v-model="itemName"></b-form-input>
+          </b-form-group>
           <div v-if="itemType === 'st'">
-            <b-form-group id="input-group-2" label="端末台数" label-for="input-2">
-              <b-form-input id="input-2" v-model="itemNum"></b-form-input>
+            <b-form-group
+              label="端末台数"
+              label-for="number"
+              :label-cols="2">
+              <b-form-input id="number" v-model="itemNum"></b-form-input>
             </b-form-group>
           </div>
         </b-form-group>
@@ -26,7 +48,6 @@
          </template>
       </b-modal>
     </div>
-
     <ul v-for="data in treeData" id="tree">
       <tree-item
         class="item"
@@ -39,6 +60,7 @@
 
 <script>
 import treeItem from './TreeItem.vue'
+import sampleData from '../sample_data.js'
 
 export default {
   name: 'tree',
@@ -46,15 +68,22 @@ export default {
   data: () => {
     return {
       showModal: false,
-      treeData: [],
+      treeData: sampleData,
+      isNew: true,
       itemName: '',
+      itemId: '',
       itemNum: '',
       itemType: '',
       item: Object,
-      modalTitle: '事業者登録'
+      modalTitle: ''
     }
   },
   methods: {
+    addOperator: function () {
+      this.modalTitle = "事業者登録"
+      this.itemType = 'op'
+      this.showModal = true
+    },
     addItem: function (item) {
       if (item.children == undefined) {
         this.$set(item, 'children', [])
@@ -76,31 +105,43 @@ export default {
       this.showModal = true
     },
     add: function () {
-      if (this.itemType === "op") {
-        this.treeData.push({name: this.itemName, type: this.itemType})
-      } else if (this.itemType === "st") {
-        this.item.children.push({
-          name: this.itemName,
-          type: this.itemType,
-          children: [{
-            name: this.itemNum,
-            type: "tm"
-            }]
-        })
-
+      var itemType = this.itemType
+      var itemNum = this.itemNum
+      var data = {
+        name: this.itemName, 
+        id: this.itemId,
+        type: this.itemType
+      }
+      if (itemType === "op") {
+        this.treeData.push(data)
+      } else if (itemType === "st") {
+        data['children'] = [{name: itemNum, type: "tm"}]
+        this.item.children.push(data)
       } else {
-        this.item.children.push({
-          name: this.itemName,
-          type: this.itemType
-        })
-
+        this.item.children.push(data)
       }
       this.clearItemName()
     },
     clearItemName: function () {
       this.itemName = ''
       this.itemNum = ''
+      this.itemId = ''
+    },
+    printItemList: function () {
+      console.log(this.treeData);
     }
   }
 }
 </script>
+
+<style>
+#tree {
+  width: 500px;
+  background: #dadada;
+  border-radius :8px;
+  box-shadow :0px 0px 5px silver;
+  padding: 0.5em 0.5em 0.5em 2em;
+  margin: auto;
+  margin-top: 20px;
+}
+</style>

@@ -3,7 +3,7 @@
     <div
       :class="{bold: isFolder}"
       @click="toggle">
-      {{ item.name }}
+      {{ item.id }} {{ item.id ? ':' : '' }} {{ item.name }} {{ item.type == 'tm' ? '台' : '' }}
       <span v-show="item.children != undefined">[ {{ isOpen ? '-' : '+' }} ]</span>
     </div>
     <ul v-show="isOpen">
