@@ -1,21 +1,23 @@
 <template>
   <div id="app">
-    <Home />
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import Home from './components/Home.vue'
-
 export default {
   name: 'app',
-  components: {
-    Home
-  }
 }
 </script>
 
 <style lang="scss">
+/* Import Font Awesome Icons Set */
+$fa-font-path: '~font-awesome/fonts/';
+@import '~font-awesome/scss/font-awesome.scss';
+@import '~@fortawesome/fontawesome-free-webfonts/css/fontawesome.css';
+@import '~@fortawesome/fontawesome-free-webfonts/css/fa-regular.css';
+@import '~@fortawesome/fontawesome-free-webfonts/css/fa-solid.css';
+
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -35,7 +37,7 @@ body {
   font-weight: bold;
 }
 ul {
-  list-style-type: dot;
+  list-style-type: none;
   text-align: left;
 }
 ul li, ol li {
