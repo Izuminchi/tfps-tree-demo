@@ -9,7 +9,7 @@
 
       <div v-if="item.id" class="d-inline">
         <span v-if="!editableId" @click="editableId=true, setEditable()">{{ item.id }} </span>
-        <input v-else type="text" size="8" :value="item.id" ref="ref" @input="updateId" @blur="editableId=false" @keyup.enter="editableId=false">
+        <input v-else type="number" min="1" size="8" :value="item.id" ref="ref" @input="updateId" @blur="editableId=false" @keyup.enter="editableId=false">
       </div>
       
       <div v-if="item.name" class="d-inline">
@@ -18,7 +18,7 @@
       </div>
       
       <span v-if="!editableTerminal" v-show="item.terminals!=undefined" @click="editableTerminal=true, setEditable()">： {{item.terminals!=null?item.terminals:0}}台</span>
-      <input v-else type="text" size="3" :value="item.terminals" ref="ref" @input="updateTerminals" @blur="editableTerminal=false" @keyup.enter="editableTerminal=false">
+      <input v-else type="number" min="1" size="3" :value="item.terminals" ref="ref" @input="updateTerminals" @blur="editableTerminal=false" @keyup.enter="editableTerminal=false">
 
       <span v-show="isHover">
         <i class="far fa-edit fa-fw" @click="editItem(item)"></i>

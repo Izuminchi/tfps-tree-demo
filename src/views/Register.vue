@@ -1,10 +1,20 @@
 <template>
-  <div>
-    <div>
-      
+  <div class="wrapper">
+    <div class="animated fadeIn">
+      <b-row class="ml-3">
+        <b-col>
+          <b-form-group
+              label="ACQコード"
+              label-for="acq-code"
+              :label-cols="1">
+              <b-form-input id="acq-code" type="number" style="width:150px;"></b-form-input>
+          </b-form-group>
+        </b-col>
+      </b-row>
+    
       <b-row class="ml-3">
         <b-col sm="4" md="2">
-          <b-button block @click="addOperator()">+ 事業者を追加する</b-button>
+          <b-button block class="add-operator" @click="addOperator()">+ 事業者を追加する</b-button>
         </b-col>
         <b-col sm="4" md="2">
           <b-button block @click="sendJson()">作成</b-button>
@@ -23,139 +33,112 @@
           @update-terminals="updateTerminals">
         </tree-item>
       </ul>
-      
-      <b-modal v-model="showJson" hide-footer @hidden="$router.go({name:'register'})">
-        <div class="card mr-auto ml-auto">
-          <div class="card-header">
-            <span>json</span>
-          </div>
-          <div class="card-body p-2">
-            {{jsonToSend}}
-          </div>
-        </div>
-      </b-modal>
-      
-      <b-modal size="xl" v-model="showModal" @show="resetModal">
-        <template slot="modal-title">{{ modalTitle }}</template>
-        
-        <div class="text-center loading" v-show="loading">
-          <b-spinner style="width: 4rem; height: 4rem;" label="Text Centered"></b-spinner>
-        </div>
-        
-        <b-form-radio-group
-          :plain="true"
-          :options="[
-            {text: '新規 ', value: true},
-            {text: '既存 ', value: false}
-            ]"
-          :checked="1"
-          v-model="isNew">
-        </b-form-radio-group>
-          
-        <b-row>
-          <b-col md="4">
-            <b-form-group label="ID" label-for="id">
-              <b-form-textarea id="id" v-model="input.id" v-bind:disabled="isNew" rows="20"></b-form-textarea>
-            </b-form-group>
-          </b-col>
-          <b-col md="4">
-            <b-form-group label="名称" label-for="name">
-              <b-form-textarea id="name" v-model="input.name" rows="20"></b-form-textarea>
-            </b-form-group>
-          </b-col>
-          <b-col md="4">
-            <div v-show="itemType === 'store'">
-              <b-form-group label="端末台数" label-for="terminal">
-                <b-form-textarea id="terminal" v-model="input.terminal" rows="20"></b-form-textarea>
-              </b-form-group>
-            </div>
-          </b-col>
-        </b-row>
-        
-        <p v-show="errors.length">
-          <ul class="text-danger pl-0">
-            <li class="pb-0" v-for="(error,index) in errors" :key="index">{{ error }}</li>
-          </ul>
-        </p>
-        
-        <template slot="modal-footer">
-          <b-button size="sm" @click="showModal=false">キャンセル</b-button>
-          <b-button size="sm" variant="primary" @click="addButtonClicked" :disabled="loading">追加</b-button>
-        </template>
-      </b-modal>
-      
-      <b-modal size="sm" v-model="deleteModal" hide-header @ok="deleteTrue">
-        <p class="my-4">削除してよろしいですか？</p>
-      </b-modal>
-      
-      <b-modal v-model="editModal" title="編集" @show="errors=[]">
-        <b-form-group>
-          <label for="edit-id">ID</label>
-          <b-form-input id="edit-id" type="number" v-model="editInput.id"></b-form-input>
-        </b-form-group>
-        <b-form-group>
-          <label for="edit-name">名称</label>
-          <b-form-input id="edit-name" v-model="editInput.name"></b-form-input>
-        </b-form-group>
-        <div v-if="editData.terminals!=null">
-          <label for="edit-terminal">端末台数</label>
-          <b-form-input id="edit-terminal" type="number" v-model="editInput.terminals"></b-form-input>
-        </div>
-        <p v-show="errors.length">
-          <ul class="text-danger pl-0">
-            <li class="pb-0" v-for="(error,index) in errors" :key="index">{{ error }}</li>
-          </ul>
-        </p>
-        <template slot="modal-footer">
-          <b-button size="sm" @click="editModal=false">キャンセル</b-button>
-          <b-button size="sm" variant="primary" @click="editButtonClicked">保存</b-button>
-        </template>
-      </b-modal>
-      
     </div>
+      
+    <b-modal v-model="showJson" hide-footer @hidden="$router.go({name:'register'})">
+      <div class="card mr-auto ml-auto">
+        <div class="card-header">
+          <span>json</span>
+        </div>
+        <div class="card-body p-2">
+          {{item}}
+        </div>
+      </div>
+    </b-modal>
+      
+    <b-modal id="add-modal" class="add-modal" size="lg" v-model="addModal" @show="errors=[]">
+      <template slot="modal-title">{{ modalTitle }}</template>
+      <div class="text-center loading" v-show="loading">
+        <b-spinner style="width: 4rem; height: 4rem;" label="Text Centered"></b-spinner>
+      </div>
+      
+      <hot-table ref="hotTable" :settings="hotSettings" style="height:440px; overflow:hidden;">
+        <hot-column title="ID" :settings="numSetting" :width="250"></hot-column>
+        <hot-column title="名称" :width="360"></hot-column>
+        <hot-column v-if="itemType==='store'" title="端末台数" :settings="numSetting" :width="100"></hot-column>
+      </hot-table>
+      
+      <p v-show="errors.length">
+        <ul class="text-danger pl-0">
+          <li class="pb-0" v-for="(error,index) in errors" :key="index">{{ error }}</li>
+        </ul>
+      </p>
+      
+      <template slot="modal-footer">
+        <b-button size="sm" @click="addModal=false">キャンセル</b-button>
+        <b-button size="sm" variant="primary" @click="addButtonClicked" :disabled="loading">追加</b-button>
+      </template>
+    </b-modal>
+      
+    <b-modal class="delete-modal" size="sm" v-model="deleteModal" hide-header @ok="deleteTrue">
+      <p class="my-4">削除してよろしいですか？</p>
+    </b-modal>
+      
+    <b-modal class="edit-modal" v-model="editModal" title="編集" @show="errors=[]">
+      <b-form-group>
+        <label for="edit-id">ID</label>
+        <b-form-input id="edit-id" type="number" min="1" v-model="editInput.id"></b-form-input>
+      </b-form-group>
+      <b-form-group>
+        <label for="edit-name">名称</label>
+        <b-form-input id="edit-name" v-model="editInput.name"></b-form-input>
+      </b-form-group>
+      <div v-if="itemToEdit && itemToEdit.terminals!=null">
+        <label for="edit-terminal">端末台数</label>
+        <b-form-input id="edit-terminal" type="number" min="1" v-model="editInput.terminals"></b-form-input>
+      </div>
+      <p v-show="errors.length">
+        <ul class="text-danger pl-0">
+          <li class="pb-0" v-for="(error,index) in errors" :key="index">{{ error }}</li>
+        </ul>
+      </p>
+      <template slot="modal-footer">
+        <b-button size="sm" @click="editModal=false">キャンセル</b-button>
+        <b-button size="sm" variant="primary" @click="editButtonClicked">保存</b-button>
+      </template>
+    </b-modal>
   </div>
 </template>
 
 <script>
-import treeItem from '@/components/TreeItem.vue'
+import TreeItem from '@/components/TreeItem.vue'
+import { HotTable, HotColumn } from '@handsontable/vue'
+import hotTableSettings from '@/hotTableSettings.js'
 import sampleData from '@/sample_data.js'
 
 export default {
   name: 'register',
-  components: {treeItem},
+  components: { TreeItem, HotTable, HotColumn },
   data: () => {
     return {
-      showModal: false,
+      addModal: false,
       deleteModal: false,
       editModal: false,
-      isNew: true,
       loading: false,
       showJson: false,
       modalTitle: '',
       itemType: '',
-      input: {
-        id: '',
-        name: '',
-        terminal: ''
-      },
       item: sampleData,
-      tempItem: Object,
-      errors: [],
-      editData: Object,
+      itemToAdd: null,
+      itemToEdit: null,
+      itemToDelete: null,
       editInput: {
         id: '',
         name: '',
         terminals: ''
       },
-      deleteData: [],
-      jsonToSend: []
+      errors: [],
+      regex: /^([1-9][0-9]*)*$/,
+      hotSettings: hotTableSettings.hotSetting,
+      numSetting: hotTableSettings.numSetting
     }
   },
   methods: {
     addOperator () {
       this.modalTitle = "事業者登録"
-      this.itemType   = 'enterprise'
-      this.showModal  = true
+      this.itemType   = "enterprise"
+      this.addModal   = true
+      this.itemToAdd  = null
     },
     showAddModal (item) {
       switch (item.type) {
@@ -175,16 +158,15 @@ export default {
           break;
         default:
       }
-      this.tempItem  = item
-      this.showModal = true
+      this.itemToAdd  = item
+      this.addModal = true
     },
-    createData (nameList, idList, terminalList, type) {
+    createData (idList, nameList, terminalList, type) {
       let data  = []
-      const arr = this.isNew ? nameList : idList
-      for (let i = 0; i < arr.length; i++) {
+      for (let i = 0; i < idList.length; i++) {
         data.push({
-          id: !this.isNew ? parseInt(idList[i]) : null, 
-          name: nameList[i] ? nameList[i] : null,
+          id: parseInt(idList[i]), 
+          name: nameList[i],
           type: type
         })
         if (this.itemType == "store") {
@@ -198,58 +180,68 @@ export default {
         requestAnimationFrame(callback)
       })
     },
-    addButtonClicked () {  
-      //textareaを改行で分解して配列に格納
-      const nameList      = this.input.name.split(/\r\n|\n/)
-      const idList        = this.input.id.split(/\r\n|\n/)
-      const terminalList  = this.input.terminal.split(/\r\n|\n/)
-      console.log(nameList);
+    typeIs (type, obj) {
+    var clas = Object.prototype.toString.call(obj).slice(8, -1);
+    return obj !== undefined && obj !== null && type.includes(clas);
+    },
+    addButtonClicked () {
+      const col1 = this.$refs.hotTable.hotInstance.getDataAtCol(0)
+      const col2 = this.$refs.hotTable.hotInstance.getDataAtCol(1)
+      const col3 = this.$refs.hotTable.hotInstance.getDataAtCol(2)
+      let idList       = []
+      let nameList     = []
+      let terminalList = []
+      
+      //IDか名称がある行のみリストに格納
+      for (let i = 0; i < col1.length; i++) {
+        if (col1[i] || col2[i]) {
+          idList.push(col1[i])
+          nameList.push(col2[i])
+          terminalList.push(col3[i])
+        }
+      }
+      
+      //validation
+      this.errors = []
+      
+      /* 新規のみ名称の重複チェック */
+      //入力済み&入力中の中で、IDのないnodeの名称リストを取得
+      const newNameList = this.getNewNameList(idList, nameList)
+      if (new Set(newNameList).size !== newNameList.length) {
+        this.errors.push("名称が重複しています")
+      }
+      /* idの重複チェック */
       //入力済みIDの取得
       const enteredIdList = this.getEnteredIdList(this.itemType)
-      // inputの端末台数の合計を取得
-      let inputTotal = terminalList.reduce(function (accumulator, currentValue) {
-        let val = currentValue ? parseInt(currentValue) : 0
-        return accumulator + val
-      },0)
-      
-      this.errors         = []
-      //validation name
-      if (this.isNew && this.isIncludeNull(nameList)) {
-        this.errors.push("名称に空文字が含まれています")
-      }
-      //validation id
-      if (!this.isNew && this.isIncludeNull(idList)) {
-        this.errors.push("IDに空文字が含まれています")
-      }
-      if (!this.isNew && !this.isOnlyInt(idList)) {
-        this.errors.push("IDは1以上の半角数字で入力してください")
-      }
-      if (!this.isNew && this.hasSameId(idList, enteredIdList)) {
+      if (this.hasSameId(idList, enteredIdList)) {
         this.errors.push("IDが重複しています")
       }
-      //validation terminal
-      if (this.itemType == "store" && !this.isOnlyInt(terminalList)) {
-        this.errors.push("端末台数は半角数字で入力してください")
-      }
-      // inputの端末台数の合計と入力済みの端末台数の合計が6000を超えないように制限
-      if (inputTotal + this.getTerminals() > 6000) {
-        this.errors.push("一度に登録可能な端末の最大数(6000)をオーバーしています")
+      /* 入力中の端末台数の合計と入力済みの端末台数の合計が 6000台を超えないように制限 */
+      if (this.itemType == "store") {
+        //入力中の端末台数の合計を取得
+        let inputTotal = terminalList.reduce((accumulator, currentValue) => {
+          let val = currentValue ? parseInt(currentValue) : 0
+          return accumulator + val
+        }, 0)
+        if (inputTotal + this.getTerminals() > 6000) {
+          this.errors.push("一度に登録可能な端末の最大数(6000)をオーバーしています")
+        }  
       }
       if (this.errors.length > 0) {
         return
       }
-    
+      
       //追加するdataを作成
-      let data     = this.createData(nameList, idList, terminalList, this.itemType)
-      // loading開始
+      let data = this.createData(idList, nameList, terminalList, this.itemType)
+      //loading開始
       const self   = this
       this.loading = true
-      // loading animationが開始されてから後続処理実行
+      //loading animationが開始されてから後続処理実行
       this.requestAnimation(() => {
         //input dataをtree itemに追加
         self.addItem(data)
         self.loading   = false
-        self.showModal = false
+        self.addModal = false
       })
     },
     addItem (data) {
@@ -259,17 +251,17 @@ export default {
           this.item = this.item.concat(data)
           break;
         case "merchant":
-          this.tempItem.merchants = this.tempItem.merchants.concat(data)
+          this.itemToAdd.merchants = this.itemToAdd.merchants.concat(data)
           break;
         case "store":
-          this.tempItem.stores = this.tempItem.stores.concat(data)
+          this.itemToAdd.stores = this.itemToAdd.stores.concat(data)
           break;
         default:
       }
     },
     showEditModal (data) {
       this.editModal = true
-      this.editData  = data
+      this.itemToEdit  = data
       this.editInput = {
         id:  data.id,
         name: data.name,
@@ -278,9 +270,9 @@ export default {
     },
     editButtonClicked () {
       // 編集中のID以外のIDリストを取得
-      let enteredIdList = this.getEnteredIdList(this.editData.type).filter(n=>n!==this.editData.id)
+      let enteredIdList = this.getEnteredIdList(this.itemToEdit.type).filter(n=>n!==this.itemToEdit.id)
       // 編集中の端末台数以外の合計台数を取得
-      let terminalTotal = this.getTerminals() - parseInt(this.editData.terminals)
+      let terminalTotal = this.getTerminals() - parseInt(this.itemToEdit.terminals)
       this.errors = []
       
       if (!this.editInput.id && !this.editInput.name) {
@@ -295,23 +287,21 @@ export default {
       if (this.errors.length > 0) {
         return
       }
-      this.editData.id   = parseInt(this.editInput.id)
-      this.editData.name = this.editInput.name
-      if (this.editData.type == "store") {
-        this.editData.terminals = this.editInput.terminals ? parseInt(this.editInput.terminals) : 0
+      this.itemToEdit.id   = parseInt(this.editInput.id)
+      this.itemToEdit.name = this.editInput.name
+      if (this.itemToEdit.type == "store") {
+        this.itemToEdit.terminals = this.editInput.terminals ? parseInt(this.editInput.terminals) : 0
       }
       this.editModal = false
     },
     updateId (e) {
       let idList = this.getEnteredIdList(e.item.type)
-      if (e.value && this.isOnlyInt([e.value]) && !this.hasSameId([e.value], idList)) {
+      if (e.value && this.regex.test(e.value) && !this.hasSameId([e.value], idList)) {
         e.item.id = parseInt(e.value)
       }
     },
     updateName (e) {
-      if (e.item.id) {
-        e.item.name = e.value
-      } else if (e.value) {
+      if (e.item.id || e.value) {
         e.item.name = e.value
       }
     },
@@ -319,19 +309,39 @@ export default {
       const value = parseInt(e.value)
       if (!e.value) {
         e.item.terminals = 0
-      } else if (this.isOnlyInt([value]) && (value + this.getTerminals()) < 6000) {
+      } else if (this.regex.test(value) && (value + this.getTerminals()) < 6000) {
         e.item.terminals = value
       }
     },
+    getNewNameList (idList, nameList) {
+      const self = this
+      let newNameList = []
+      // 入力中の中でIDのない名称をリストに格納
+      idList.forEach((v, i) => { if (!v) newNameList.push(nameList[i])})
+
+      let targetNode
+      if (this.itemToAdd) {
+        // 追加対象と同じ階層のnodeを取得
+        Object.entries(this.itemToAdd).forEach(([k, v]) => {
+          if (self.typeIs(['Array'], v)) { targetNode = v }
+        })
+      } else {
+        // 事業者の場合は親node
+        targetNode = this.item
+      }
+      // IDがないnodeの名称をリストに格納
+      targetNode.forEach((value) => { if (!value.id) newNameList.push(value.name) })
+      return newNameList
+    },
     getEnteredIdList (type) {
       let idList = []
-      this.item.forEach(function(value) {
+      this.item.forEach((value) => {
         if (type == "enterprise" && value.id) { idList.push(value.id) }
         if (value.merchants) {
-          value.merchants.forEach(function(value) {
+          value.merchants.forEach((value) => {
             if (type == "merchant" && value.id) {idList.push(value.id)}
             if (value.stores) {
-              value.stores.forEach(function(value) {
+              value.stores.forEach((value) => {
                if (type == "store" && value.id) {idList.push(value.id)}
               })
             }
@@ -342,33 +352,26 @@ export default {
     },
     getTerminals () {
       let total = 0
-      JSON.parse(JSON.stringify(this.item), function(key, value){  
+      JSON.parse(JSON.stringify(this.item), (key, value) => {  
         if (key == "terminals") { total = total + value }
       })
       return total
     },
     hasSameId (inputIdList, enteredIdList) {
-      return inputIdList.some(value => enteredIdList.includes(parseInt(value))) 
-             || new Set(inputIdList).size !== inputIdList.length
-    },
-    isIncludeNull (arr) {
-      return arr.includes("")
-    },
-    isOnlyInt (arr) {
-      //stringのままチェックするため正規表現を使用
-      const regex = new RegExp(/^([1-9][0-9]*)*$/)
-      return arr.every(value => regex.test(value))
+      const exceptNull = inputIdList.filter(Boolean)
+      return exceptNull.some(value => enteredIdList.includes(parseInt(value))) 
+             || new Set(exceptNull).size !== exceptNull.length
     },
     showDeleteModal (data) {
       this.deleteModal = true
-      this.deleteData = data
+      this.itemToDelete = data
     },
     deleteTrue() {
       this.deleteItem()
     },
     deleteItem () {
-      const parent = this.deleteData.parent
-      const child  = this.deleteData.child
+      const parent = this.itemToDelete.parent
+      const child  = this.itemToDelete.child
       let parentItem
       
       switch (child.type) {
@@ -383,7 +386,7 @@ export default {
           break;
         default:
       }
-      for (let i = 0, len = parentItem.length; i < len; i++) {
+      for (let i = 0; i < parentItem.length;  i++) {
         if (parentItem[i] === child) {
           parentItem.splice(i, 1)
           break
@@ -391,24 +394,18 @@ export default {
       }
     },
     deleteType (item) {
-      let vm = this
-      item.forEach(function(value) {
-        delete value.type
-        if (value.merchants) {
-          vm.deleteType(value.merchants)
-        } else if (value.stores) {
-          vm.deleteType(value.stores)
+      const self = this
+      for (var key in item) {
+        delete item.type
+        if (self.typeIs(['Array', 'Object'], item[key])) {
+          self.deleteType(item[key])
         }
-      })
+      }
       return item
     },
-    resetModal () {
-      this.errors    = []
-      this.input     = { id: '', name: '', terminal: ''}
-    },
     sendJson () {
-      this.jsonToSend  = this.deleteType(this.item)
-      this.showJson    = true
+      this.item.forEach(value => this.deleteType(value))
+      this.showJson = true
     }
   }
 }
@@ -428,6 +425,11 @@ export default {
   z-index: 10;
   left: 50%;
   top: 40%;
+}
+.handsontable td {
+  padding: 2px 10px 2px 10px;
+  font-size: 16px;
+  text-align: right;
 }
 
 </style>

@@ -1,4 +1,4 @@
-# tree-demo
+# spike-merchant-tree
 
 ## Project setup
 ```

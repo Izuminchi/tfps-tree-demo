@@ -1,24 +1,24 @@
 export default
 [
   {
-    name: '株式株式株式株式会社出雲',
-    id: '12345',
+    name: '株式会社出雲',
+    id: 12345,
     type: 'enterprise',
     merchants: [
       {
         name: 'イズモスポーツ',
-        id: '2345',
+        id: 2345,
         type: 'merchant',
         stores: [
           {
-            name: '表表表表表表表表参道店',
-            id: '987',
+            name: null,
+            id: 987,
             type: 'store',
-            terminals: 0
+            terminals: 3
           },
           {
             name: '上野店',
-            id: '876',
+            id: 876,
             type: 'store',
             terminals: 4
           }
@@ -26,7 +26,7 @@ export default
       },
       {
         name: 'Gym IZUMO',
-        id: '3456',
+        id: 3456,
         type: 'merchant',
         stores: [
           {

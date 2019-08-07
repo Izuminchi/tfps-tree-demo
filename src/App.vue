@@ -17,6 +17,8 @@ $fa-font-path: '~font-awesome/fonts/';
 @import '~@fortawesome/fontawesome-free-webfonts/css/fontawesome.css';
 @import '~@fortawesome/fontawesome-free-webfonts/css/fa-regular.css';
 @import '~@fortawesome/fontawesome-free-webfonts/css/fa-solid.css';
+@import '~../node_modules/handsontable/dist/handsontable.full.css';
+
 
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
