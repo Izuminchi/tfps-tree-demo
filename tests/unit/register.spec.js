@@ -8,6 +8,8 @@ const localVue = createLocalVue()
 localVue.use(BootstrapVue)
 localVue.use(HotTable)
 
+
+//add
 describe('add', () => {
   
   it ('values have to be set after button is clicked', () => {
@@ -30,43 +32,75 @@ describe('add', () => {
     })
     wrapper.find('.add-operator').trigger('click')
 
-    // expect(wrapper.isVueInstance()).toBe(true)
-    // const $modal = wrapper.find('div.modal')
-    // expect($modal.exists()).toBe(true)
     // const outer = document.getElementById('modal1___BV_modal_outer_')
     // expect(outer).toBeDefined()
     // expect(outer.__vue__).toBeDefined()
-    // expect(wrapper.contains('#modal1')).toBe(true)
-    
-    // console.log(wrapper.options);
-    // console.log(wrapper.html());
     
     wrapper.destroy()
   })
 })
 
 
+
+//edit
 describe('edit', () => {
-  it ('add button clicked', () => { 
-    const wrapper = mount(Component,{
-      attachToDocument: true,
-      localVue: localVue
-    })
-    wrapper.setData({ item: SampleData })
-    console.log(wrapper.html());
-    
+  const wrapper = mount(Component,{
+    attachToDocument: true,
+    localVue: localVue
+  })
+  wrapper.setData({ item: SampleData })
+  // console.log(wrapper.html());
+  
+  it ('modal has to be open, data has to be emitted', () => {
     expect(wrapper.find('.fa-edit').isVisible()).toBe(false)
     wrapper.find('.fa-edit').trigger('click')
-    
+  
     expect(wrapper.vm.editModal).toBe(true)
-    expect(wrapper.vm.itemToEdit.name).toBe("株式会社出雲")
-    expect(wrapper.vm.itemToEdit.id).toBe(12345)
+    expect(wrapper.vm.itemToEdit).not.toBeUndefined()
+    expect(wrapper.vm.editInput).not.toBeUndefined()
+    
+    const outer = document.getElementById('__BVID__21___BV_modal_outer_')
+    expect(outer).toBeDefined()
 
+    wrapper.setData({ editInput: {id:123, name:"テスト"} })
+    expect(wrapper.vm.itemToEdit.id).not.toBe(wrapper.vm.editInput.id)
+    expect(wrapper.vm.itemToEdit.name).not.toBe(wrapper.vm.editInput.name)
+
+    document.getElementById('save').click()
+    expect(wrapper.vm.editModal).toBe(false)
+      
+    expect(wrapper.vm.itemToEdit.id).toBe(wrapper.vm.editInput.id)
+    expect(wrapper.vm.itemToEdit.name).toBe(wrapper.vm.editInput.name)
+    wrapper.destroy()
   })
 })
 
 
 
+//delete
+describe('delete', () => {
+  const wrapper = mount(Component,{
+    attachToDocument: true,
+    localVue: localVue
+  })
+  wrapper.setData({ item: SampleData })
+  it ('modal has to be open, data has to be emitted', () => {
+    expect(wrapper.find('.fa-trash-alt').isVisible()).toBe(false)
+    wrapper.find('.fa-trash-alt').trigger('click')
+
+    expect(wrapper.vm.deleteModal).toBe(true)
+    expect(wrapper.vm.itemToDelete.parent).not.toBeUndefined()
+    expect(wrapper.vm.itemToDelete.child).not.toBeUndefined()
+  })
+
+  it ('data has to be deleted from parent node', () => {
+    expect(wrapper.vm.itemToDelete.parent.item).toContain(wrapper.vm.itemToDelete.child)
+    document.getElementById('ok').click()
+
+    expect(wrapper.vm.deleteModal).toBe(false)
+    expect(wrapper.vm.itemToDelete.parent.item).not.toContain(wrapper.vm.itemToDelete.child)
+  })
+})
 
 
 

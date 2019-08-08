@@ -1,4 +1,5 @@
 <template>
+  
   <div class="wrapper">
     <div class="animated fadeIn">
       <b-row class="ml-3">
@@ -35,6 +36,8 @@
       </ul>
     </div>
       
+    <div class="testtest">
+      
     <b-modal v-model="showJson" hide-footer @hidden="$router.go({name:'register'})">
       <div class="card mr-auto ml-auto">
         <div class="card-header">
@@ -70,11 +73,15 @@
       </template>
     </b-modal>
       
-    <b-modal class="delete-modal" size="sm" v-model="deleteModal" hide-header @ok="deleteTrue">
+    <b-modal id="delete-modal" size="sm" v-model="deleteModal" hide-header>
       <p class="my-4">削除してよろしいですか？</p>
+      <template slot="modal-footer">
+        <b-button size="sm" @click="deleteModal=false">キャンセル</b-button>
+        <b-button size="sm" id="ok" variant="primary" @click="deleteTrue">OK</b-button>
+      </template>
     </b-modal>
       
-    <b-modal class="edit-modal" v-model="editModal" title="編集" @show="errors=[]">
+    <b-modal id="edit-modal" v-model="editModal" title="編集" @show="errors=[]">
       <b-form-group>
         <label for="edit-id">ID</label>
         <b-form-input id="edit-id" type="number" min="1" v-model="editInput.id"></b-form-input>
@@ -94,9 +101,11 @@
       </p>
       <template slot="modal-footer">
         <b-button size="sm" @click="editModal=false">キャンセル</b-button>
-        <b-button size="sm" variant="primary" @click="editButtonClicked">保存</b-button>
+        <b-button size="sm" id="save" variant="primary" @click="editButtonClicked">保存</b-button>
       </template>
     </b-modal>
+    
+    </div>
   </div>
 </template>
 
@@ -392,6 +401,7 @@ export default {
           break
         }
       }
+      this.deleteModal = false
     },
     deleteType (item) {
       const self = this

@@ -11,7 +11,7 @@ export default
         type: 'merchant',
         stores: [
           {
-            name: null,
+            name: '表参道店',
             id: 987,
             type: 'store',
             terminals: 3
