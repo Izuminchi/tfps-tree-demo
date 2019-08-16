@@ -15,7 +15,7 @@
     
       <b-row class="ml-3">
         <b-col sm="4" md="2">
-          <b-button block class="add-operator" @click="addOperator()">+ 事業者を追加する</b-button>
+          <b-button block id="add-operator" @click="addOperator()">+ 事業者を追加する</b-button>
         </b-col>
         <b-col sm="4" md="2">
           <b-button block @click="sendJson()">作成</b-button>
@@ -35,9 +35,7 @@
         </tree-item>
       </ul>
     </div>
-      
-    <div class="testtest">
-      
+          
     <b-modal v-model="showJson" hide-footer @hidden="$router.go({name:'register'})">
       <div class="card mr-auto ml-auto">
         <div class="card-header">
@@ -49,16 +47,16 @@
       </div>
     </b-modal>
       
-    <b-modal id="add-modal" class="add-modal" size="lg" v-model="addModal" @show="errors=[]">
+    <b-modal id="add-modal" size="lg" v-model="addModal" @show="errors=[]">
       <template slot="modal-title">{{ modalTitle }}</template>
       <div class="text-center loading" v-show="loading">
-        <b-spinner style="width: 4rem; height: 4rem;" label="Text Centered"></b-spinner>
+        <b-spinner style="width: 4rem; height: 4rem;"></b-spinner>
       </div>
       
       <hot-table ref="hotTable" :settings="hotSettings" style="height:440px; overflow:hidden;">
-        <hot-column title="ID" :settings="numSetting" :width="250"></hot-column>
-        <hot-column title="名称" :width="360"></hot-column>
-        <hot-column v-if="itemType==='store'" title="端末台数" :settings="numSetting" :width="100"></hot-column>
+        <hot-column ref="colId" title="ID" :settings="numSetting" :width="250"></hot-column>
+        <hot-column ref="colName" title="名称" :width="360"></hot-column>
+        <hot-column ref="colStore" v-if="itemType==='store'" title="端末台数" :settings="numSetting" :width="100"></hot-column>
       </hot-table>
       
       <p v-show="errors.length">
@@ -69,7 +67,7 @@
       
       <template slot="modal-footer">
         <b-button size="sm" @click="addModal=false">キャンセル</b-button>
-        <b-button size="sm" variant="primary" @click="addButtonClicked" :disabled="loading">追加</b-button>
+        <b-button size="sm" id="add-button" variant="primary" @click="addButtonClicked" :disabled="loading">追加</b-button>
       </template>
     </b-modal>
       
@@ -101,11 +99,10 @@
       </p>
       <template slot="modal-footer">
         <b-button size="sm" @click="editModal=false">キャンセル</b-button>
-        <b-button size="sm" id="save" variant="primary" @click="editButtonClicked">保存</b-button>
+        <b-button size="sm" id="update" variant="primary" @click="editButtonClicked">保存</b-button>
       </template>
     </b-modal>
     
-    </div>
   </div>
 </template>
 
@@ -127,7 +124,7 @@ export default {
       showJson: false,
       modalTitle: '',
       itemType: '',
-      item: sampleData,
+      item: [],
       itemToAdd: null,
       itemToEdit: null,
       itemToDelete: null,
@@ -242,16 +239,18 @@ export default {
       
       //追加するdataを作成
       let data = this.createData(idList, nameList, terminalList, this.itemType)
-      //loading開始
       const self   = this
       this.loading = true
+      
+      
+      // self.addItem(data)
+      
       //loading animationが開始されてから後続処理実行
-      this.requestAnimation(() => {
-        //input dataをtree itemに追加
-        self.addItem(data)
-        self.loading   = false
-        self.addModal = false
-      })
+      // this.requestAnimation(() => {
+      //   self.addItem(data)
+      //   self.loading  = false
+      //   self.addModal = false
+      // })
     },
     addItem (data) {
       //typeによって追加先のプロパティを切り分け
@@ -270,7 +269,7 @@ export default {
     },
     showEditModal (data) {
       this.editModal = true
-      this.itemToEdit  = data
+      this.itemToEdit = data
       this.editInput = {
         id:  data.id,
         name: data.name,
