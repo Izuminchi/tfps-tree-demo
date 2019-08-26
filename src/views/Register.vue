@@ -2,22 +2,24 @@
   
   <div class="wrapper">
     <div class="animated fadeIn">
+      <b-alert variant="success" dismissible :show="successAlert" @dismissed="successAlert=false">アップロードが完了しました</b-alert>
+      <b-alert variant="danger" dismissible :show="errorAlert" @dismissed="errorAlert=false">{{errorMessage}}</b-alert>
       <b-row class="ml-3">
         <b-col>
           <b-form-group
               label="ACQコード"
               label-for="acq-code"
               :label-cols="1">
-              <b-form-input id="acq-code" type="number" style="width:150px;"></b-form-input>
+              <b-form-input id="acq-code" type="number" v-model="acqCode" style="width:150px;"></b-form-input>
           </b-form-group>
         </b-col>
       </b-row>
     
       <b-row class="ml-3">
-        <b-col sm="4" md="2">
-          <b-button block id="add-operator" @click="addOperator()">+ 事業者を追加する</b-button>
+        <b-col sm="4" md="3">
+          <b-button block id="add-enterprise" @click="addEnterprise()">+ 事業者を追加する</b-button>
         </b-col>
-        <b-col sm="4" md="2">
+        <b-col sm="4" md="3">
           <b-button block @click="sendJson()">作成</b-button>
         </b-col>
       </b-row>
@@ -36,7 +38,7 @@
       </ul>
     </div>
           
-    <b-modal v-model="showJson" hide-footer @hidden="$router.go({name:'register'})">
+    <b-modal v-model="showJson" hide-footer >
       <div class="card mr-auto ml-auto">
         <div class="card-header">
           <span>json</span>
@@ -48,15 +50,15 @@
     </b-modal>
       
     <b-modal id="add-modal" size="lg" v-model="addModal" @show="errors=[]">
-      <template slot="modal-title">{{ modalTitle }}</template>
+      <template slot="modal-title">{{ modalTitle }}登録</template>
       <div class="text-center loading" v-show="loading">
         <b-spinner style="width: 4rem; height: 4rem;"></b-spinner>
       </div>
       
       <hot-table ref="hotTable" :settings="hotSettings" style="height:440px; overflow:hidden;">
-        <hot-column ref="colId" title="ID" :settings="numSetting" :width="250"></hot-column>
-        <hot-column ref="colName" title="名称" :width="360"></hot-column>
-        <hot-column ref="colStore" v-if="itemType==='store'" title="端末台数" :settings="numSetting" :width="100"></hot-column>
+        <hot-column title="ID" :settings="numSetting" :width="250"></hot-column>
+        <hot-column title="名称" :width="360"></hot-column>
+        <hot-column v-if="itemType==='store'" title="端末台数" :settings="numSetting" :width="100"></hot-column>
       </hot-table>
       
       <p v-show="errors.length">
@@ -88,7 +90,7 @@
         <label for="edit-name">名称</label>
         <b-form-input id="edit-name" v-model="editInput.name"></b-form-input>
       </b-form-group>
-      <div v-if="itemToEdit && itemToEdit.terminals!=null">
+      <div v-if="itemToEdit && itemToEdit.item.terminals!=null">
         <label for="edit-terminal">端末台数</label>
         <b-form-input id="edit-terminal" type="number" min="1" v-model="editInput.terminals"></b-form-input>
       </div>
@@ -122,6 +124,9 @@ export default {
       editModal: false,
       loading: false,
       showJson: false,
+      successAlert: false,
+      errorAlert: false,
+      errorMessage: '',
       modalTitle: '',
       itemType: '',
       item: [],
@@ -133,6 +138,7 @@ export default {
         name: '',
         terminals: ''
       },
+      acqCode: '',
       errors: [],
       regex: /^([1-9][0-9]*)*$/,
       hotSettings: hotTableSettings.hotSetting,
@@ -140,8 +146,8 @@ export default {
     }
   },
   methods: {
-    addOperator () {
-      this.modalTitle = "事業者登録"
+    addEnterprise () {
+      this.modalTitle = "事業者"
       this.itemType   = "enterprise"
       this.addModal   = true
       this.itemToAdd  = null
@@ -152,14 +158,14 @@ export default {
           if (!item.merchants) {
             this.$set(item, 'merchants', [])
           }
-          this.modalTitle = "加盟店登録"
+          this.modalTitle = "加盟店"
           this.itemType   = "merchant"
           break;
         case "merchant":
           if (!item.stores) {
             this.$set(item, 'stores', [])
           }
-          this.modalTitle = "設置店舗登録"
+          this.modalTitle = "設置店舗"
           this.itemType   = "store"
           break;
         default:
@@ -180,11 +186,6 @@ export default {
         }
       }
       return data
-    },
-    requestAnimation (callback) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(callback)
-      })
     },
     typeIs (type, obj) {
     var clas = Object.prototype.toString.call(obj).slice(8, -1);
@@ -212,7 +213,8 @@ export default {
       
       /* 新規のみ名称の重複チェック */
       //入力済み&入力中の中で、IDのないnodeの名称リストを取得
-      const newNameList = this.getNewNameList(idList, nameList)
+      let newNameList = this.getEnteredNameList(this.itemToAdd)
+      idList.forEach((v, i) => { if(!v) newNameList.push(nameList[i])})
       if (new Set(newNameList).size !== newNameList.length) {
         this.errors.push("名称が重複しています")
       }
@@ -239,18 +241,13 @@ export default {
       
       //追加するdataを作成
       let data = this.createData(idList, nameList, terminalList, this.itemType)
-      const self   = this
+      
       this.loading = true
-      
-      
-      // self.addItem(data)
-      
-      //loading animationが開始されてから後続処理実行
-      // this.requestAnimation(() => {
-      //   self.addItem(data)
-      //   self.loading  = false
-      //   self.addModal = false
-      // })
+      setTimeout(() => {
+        this.addItem(data)
+        this.loading  = false
+        this.addModal = false
+      }, 1);   
     },
     addItem (data) {
       //typeによって追加先のプロパティを切り分け
@@ -268,24 +265,34 @@ export default {
       }
     },
     showEditModal (data) {
-      this.editModal = true
+      this.editModal  = true
       this.itemToEdit = data
       this.editInput = {
-        id:  data.id,
-        name: data.name,
-        terminals: data.terminals
+        id:  data.item.id,
+        name: data.item.name,
+        terminals: data.item.terminals
       }
     },
     editButtonClicked () {
+      let item = this.itemToEdit.item
+      const parent = this.itemToEdit.parent.item
+      
       // 編集中のID以外のIDリストを取得
-      let enteredIdList = this.getEnteredIdList(this.itemToEdit.type).filter(n=>n!==this.itemToEdit.id)
+      const enteredNameList = this.getEnteredNameList(parent).filter(n=>n!==item.name)
+      // 編集中のID以外のIDリストを取得
+      const enteredIdList = this.getEnteredIdList(item.type).filter(n=>n!==item.id)
       // 編集中の端末台数以外の合計台数を取得
-      let terminalTotal = this.getTerminals() - parseInt(this.itemToEdit.terminals)
+      const terminalTotal = this.getTerminals() - parseInt(item.terminals)
       this.errors = []
       
       if (!this.editInput.id && !this.editInput.name) {
         this.errors.push("IDまたは名称のどちらかを記入してください")
       }
+      
+      if (!this.editInput.id && this.editInput.name && enteredNameList.includes(this.editInput.name)) {
+        this.errors.push("名称が重複しています")
+      }
+      
       if (this.editInput.id && this.hasSameId([this.editInput.id], enteredIdList)) {
         this.errors.push("IDが重複しています")
       }
@@ -295,10 +302,10 @@ export default {
       if (this.errors.length > 0) {
         return
       }
-      this.itemToEdit.id   = parseInt(this.editInput.id)
-      this.itemToEdit.name = this.editInput.name
-      if (this.itemToEdit.type == "store") {
-        this.itemToEdit.terminals = this.editInput.terminals ? parseInt(this.editInput.terminals) : 0
+      item.id   = parseInt(this.editInput.id)
+      item.name = this.editInput.name
+      if (item.type == "store") {
+        item.terminals = this.editInput.terminals ? parseInt(this.editInput.terminals) : 0
       }
       this.editModal = false
     },
@@ -309,28 +316,31 @@ export default {
       }
     },
     updateName (e) {
-      if (e.item.id || e.value) {
+      const enteredNameList = this.getEnteredNameList(e.parent.item).filter(n=>n!==e.item.name)
+      if (!e.item.id && e.value && enteredNameList.includes(e.value) || !e.value) {
+        return
+      } else {
         e.item.name = e.value
       }
     },
     updateTerminals (e) {
       const value = parseInt(e.value)
+      const oldValue = parseInt(e.item.terminals)
+      const terminals = this.getTerminals() - oldValue
       if (!e.value) {
         e.item.terminals = 0
-      } else if (this.regex.test(value) && (value + this.getTerminals()) < 6000) {
+      } else if (this.regex.test(value) && (value + terminals) <= 6000) {
         e.item.terminals = value
       }
     },
-    getNewNameList (idList, nameList) {
+    getEnteredNameList (item) {
       const self = this
-      let newNameList = []
-      // 入力中の中でIDのない名称をリストに格納
-      idList.forEach((v, i) => { if (!v) newNameList.push(nameList[i])})
-
+      let nameList = []
       let targetNode
-      if (this.itemToAdd) {
+      
+      if (self.typeIs(['Object'], item)) {
         // 追加対象と同じ階層のnodeを取得
-        Object.entries(this.itemToAdd).forEach(([k, v]) => {
+        Object.entries(item).forEach(([k, v]) => {
           if (self.typeIs(['Array'], v)) { targetNode = v }
         })
       } else {
@@ -338,8 +348,8 @@ export default {
         targetNode = this.item
       }
       // IDがないnodeの名称をリストに格納
-      targetNode.forEach((value) => { if (!value.id) newNameList.push(value.name) })
-      return newNameList
+      targetNode.forEach((value) => { if (!value.id) nameList.push(value.name) })
+      return nameList
     },
     getEnteredIdList (type) {
       let idList = []
@@ -413,7 +423,34 @@ export default {
       return item
     },
     sendJson () {
+      if (!this.acqCode || this.item.length == 0) {
+        this.errorAlert = true
+        this.errorMessage = "acqコード・データの両方を入力してください"
+        return
+      }
+      const url = "https://1o2h0lz7dd.execute-api.ap-northeast-1.amazonaws.com/Prod/skeleton-maker"
+      
+      const params = new FormData();
       this.item.forEach(value => this.deleteType(value))
+      const jsonData = JSON.stringify(this.item)
+
+      params.append('file', jsonData);
+      params.append('acq', this.acqCode);
+      // console.log(params.get('file'));
+    
+      this.$axios.post(url, params, { headers: {'Content-Type': 'multipart/form-data'}})
+      .then(response => {
+        this.successAlert = true
+      })
+      .catch(error => {
+        this.errorAlert = true
+        this.errorMessage = "アップロードに失敗しました"
+      })
+      .finally(() => {
+        this.acqCode = null
+        this.item = []
+      })
+      
       this.showJson = true
     }
   }

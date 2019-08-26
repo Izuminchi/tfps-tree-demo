@@ -8,18 +8,21 @@
       <i v-show="item.type=='store'" class="fas fa-tablet-alt fa-fw"></i>
 
       <div v-if="item.id" class="d-inline">
-        <span v-if="!editableId" @click="editableId=true, setEditable()">{{ item.id }} </span>
-        <input v-else type="number" min="1" size="8" :value="item.id" ref="ref" @input="updateId" @blur="editableId=false" @keyup.enter="editableId=false">
+        <span v-if="!editableId" class="id" @click="editableId=true, setEditable()">{{ item.id }} </span>
+        <input v-else type="number" class="id" min="1" size="8" :value="item.id" ref="ref" @input="updateId" @blur="editableId=false" @keyup.enter="editableId=false">
       </div>
       
       <div v-if="item.name" class="d-inline">
-        <span v-if="!editableName" @click="editableName=true, setEditable()">{{item.name | truncate(10)}}</span>
-        <input v-else type="text" :value="item.name" ref="ref" @input="updateName" @blur="editableName=false" @keyup.enter="editableName=false">
+        <span v-if="!editableName" class="name" @click="editableName=true, setEditable()">{{item.name | truncate(10)}}</span>
+        <input v-else type="text" class="name" :value="item.name" ref="ref" @input="updateName" @blur="editableName=false" @keyup.enter="editableName=false">
       </div>
       
-      <span v-if="!editableTerminal" v-show="item.terminals!=undefined" @click="editableTerminal=true, setEditable()">： {{item.terminals!=null?item.terminals:0}}台</span>
-      <input v-else type="number" min="1" size="3" :value="item.terminals" ref="ref" @input="updateTerminals" @blur="editableTerminal=false" @keyup.enter="editableTerminal=false">
-
+      <div v-if="item.terminals!=undefined" class="d-inline">
+        <span>：</span>
+        <span v-if="!editableTerminal" class="terminal" @click="editableTerminal=true, setEditable()">{{item.terminals!=null?item.terminals:0}}台</span>
+        <input v-else type="number" class="terminal" min="1" size="3" :value="item.terminals" ref="ref" @input="updateTerminals" @blur="editableTerminal=false" @keyup.enter="editableTerminal=false">
+      </div>
+      
       <span v-show="isHover">
         <i class="far fa-edit fa-fw" @click="editItem(item)"></i>
       </span>
@@ -27,7 +30,7 @@
         <i class="far fa-trash-alt fa-fw" @click="deleteItem(item)"></i>
       </span>
       
-      <b-button v-if="showAdd" variant="outline-secondary" class="d-block mb-2" size="sm" @click="$emit('add-button-clicked', item)">{{addName}}を追加する</b-button>
+      <b-button id="add-child" v-if="showAdd" variant="outline-secondary" class="d-block mb-2" size="sm" @click="$emit('add-button-clicked', item)">{{addName}}を追加する</b-button>
     </div>
     <ul v-show="isOpen">
       <tree-item
@@ -102,13 +105,13 @@ export default {
       this.$emit('update-id', {value: e.target.value, item:this.item})
     },
     updateName (e) {
-      this.$emit('update-name', {value: e.target.value, item:this.item})
+      this.$emit('update-name', {value: e.target.value, item:this.item, parent: this.$parent})
     },
     updateTerminals (e) {
       this.$emit('update-terminals', {value: e.target.value, item:this.item})
     },
     editItem () {
-      this.$emit('edit-button-clicked', this.item)
+      this.$emit('edit-button-clicked', {parent: this.$parent, item:this.item})
     },
     deleteItem () {
       this.$emit('delete-button-clicked', {parent: this.$parent, child: this.item})

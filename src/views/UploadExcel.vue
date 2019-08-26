@@ -1,6 +1,7 @@
 <template>
   <div>
     <b-alert variant="success" dismissible :show="successAlert" @dismissed="successAlert=false">アップロードが完了しました</b-alert>
+    <b-alert variant="danger" dismissible :show="errorAlert" @dismissed="errorAlert=false">アップロードに失敗しました</b-alert>
     <b-card class="mx-auto" style="width:670px;">    
       <div class="input-group">
         <label class="input-group-btn">
@@ -24,7 +25,8 @@
         fileName: null,
         file: null,
         error: null,
-        successAlert: false
+        successAlert: false,
+        errorAlert: false
       }
     },
     methods: {
@@ -59,10 +61,22 @@
         if (this.file == null) {
           this.error = "ファイルを選択してください"
           return
-        }    
-        this.successAlert = true
-        this.file         = null
-        this.fileName     = null
+        }
+        const url = "https://1o2h0lz7dd.execute-api.ap-northeast-1.amazonaws.com/Prod/importer"
+        const params = new FormData();
+        params.append('file', this.file);
+
+        this.$axios.post(url, params, { headers: {'Content-Type': 'multipart/form-data'}})
+        .then(response => {
+          this.successAlert = true
+        })
+        .catch(error => {
+          this.errorAlert = true
+        })
+        .finally(() => {
+          this.file = null
+          this.fileName = null
+        })
       }
     }
   }
